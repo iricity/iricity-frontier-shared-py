@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import re
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -30,6 +31,7 @@ __all__ = [
     "verify_bytes",
     "encode_signature",
     "decode_signature",
+    "is_valid_signature_text",
 ]
 
 ED25519_MULTICODEC_PREFIX = b"\xed\x01"
@@ -116,6 +118,24 @@ class KeyPair:
         )
 
     @property
+    def seed_hex(self) -> str:
+        return self.seed.hex()
+
+    @property
+    def public_key_hex(self) -> str:
+        return self.public_key_bytes.hex()
+
+    @property
+    def private_key_pem(self) -> str:
+        return self.private_key.private_bytes(
+            serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+        ).decode("ascii")
+
+    @property
+    def public_key_pem(self) -> str:
+        return self.public_key.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode("ascii")
+
+    @property
     def did(self) -> str:
         return did_from_public_key_bytes(self.public_key_bytes)
 
@@ -144,7 +164,9 @@ def resolve_signer(signer: Any) -> KeyPair:
     if isinstance(signer, str):
         if "PRIVATE KEY" in signer:
             return KeyPair.from_private_key_pem(signer)
-        return KeyPair.from_seed(signer)
+        if re.fullmatch(r"[0-9a-fA-F]{64}", signer.strip()):
+            return KeyPair.from_seed(signer.strip())
+        raise TypeError("a string signer must be a PKCS#8 PEM or a 64-hex seed")
     if isinstance(signer, (bytes, bytearray)):
         return KeyPair.from_seed(bytes(signer))
     if isinstance(signer, Mapping):
@@ -171,15 +193,22 @@ def resolve_signer(signer: Any) -> KeyPair:
     raise TypeError("unsupported signer")
 
 
+_SIGNATURE_TEXT = re.compile(r"^[A-Za-z0-9_-]{86}$")
+
+
+def is_valid_signature_text(text: Any) -> bool:
+    """Exactly 64 bytes as unpadded base64url: the only accepted signature encoding."""
+    return isinstance(text, str) and bool(_SIGNATURE_TEXT.match(text))
+
+
 def encode_signature(signature: bytes) -> str:
     return base64.urlsafe_b64encode(bytes(signature)).decode("ascii").rstrip("=")
 
 
 def decode_signature(text: str) -> bytes:
-    if not isinstance(text, str):
-        raise TypeError("signature must be a string")
-    padding = "=" * (-len(text) % 4)
-    return base64.urlsafe_b64decode(text + padding)
+    if not is_valid_signature_text(text):
+        raise ValueError("signature must be 64 bytes as unpadded base64url")
+    return base64.urlsafe_b64decode(text + "==")
 
 
 def sign_bytes(message: bytes | str, signer: Any) -> bytes:

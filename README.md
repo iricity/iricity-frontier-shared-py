@@ -5,12 +5,12 @@ Python implementation of the Frontier State Protocol primitives, byte-for-byte c
 | Module | Provides | Standard |
 | --- | --- | --- |
 | `frontier_shared.canonical` | `canonical_json`, `format_number` | RFC 8785, ECMAScript number formatting |
-| `frontier_shared.hashing` | `hash_payload`, `hash_record`, `hash_bytes`, `sha256_hex` | SHA-256, `sha256:` prefixed hex |
+| `frontier_shared.hashing` | `hash_payload`, `hash_record`, `hash_text`, `hash_bytes`, `sha256_hex` | SHA-256 over canonical JSON, `sha256:` prefixed hex |
 | `frontier_shared.base58` | `base58_encode`, `base58_decode` | base58btc, multibase `z` |
 | `frontier_shared.keys` | `KeyPair`, `did_from_public_key_bytes`, `sign_bytes`, `verify_bytes` | W3C did:key, RFC 8032 Ed25519 |
 | `frontier_shared.envelope` | `create_envelope`, `verify_envelope` | `state-envelope/1` |
 | `frontier_shared.receipt` | `create_receipt_record`, `verify_receipt_record`, `verify_receipt_chain` | `state-receipt/1` |
-| `frontier_shared.conformance` | `run_conformance`, console script `frontier-shared-conformance` | vectors version 1 |
+| `frontier_shared.conformance` | `run_conformance`, console script `frontier-shared-conformance` | vectors version 2, eight suites |
 
 Only runtime dependency: `cryptography`.
 
@@ -22,7 +22,7 @@ frontier-shared-conformance
 ```
 
 ```
-conformance vectors 1: 23 passed, 0 failed, 0 skipped
+conformance vectors 2: 60 passed, 0 failed, 0 skipped
 RESULT: conformant
 ```
 
@@ -46,13 +46,13 @@ second = create_receipt_record(record=next_record, previous_hash=first["receipt_
 verify_receipt_chain([first, second], require_genesis=True)
 ```
 
-Objects produced here verify in the JavaScript implementation and vice versa; the vectors pin the signing inputs, hashes and encodings on both sides.
+Objects produced here verify in the JavaScript implementation and vice versa; the vectors pin the signing inputs, hashes and encodings on both sides, and 26 rejection vectors pin what both verifiers must refuse. Verifiers never raise on malformed input; every problem is an entry in `errors`.
 
 ## Where the traps were
 
 Four places decide whether a second implementation matches the bytes, and all four are covered by vectors:
 
-1. **Numbers.** RFC 8785 uses the ECMAScript Number-to-string algorithm (`1e+21`, `1e-7`, `123456789012345680000`, `-0` as `0`). `format_number` implements it from the shortest round-trip digits.
+1. **Numbers.** RFC 8785 uses the ECMAScript Number-to-string algorithm (`1e+21`, `1e-7`, `123456789012345680000`, `-0` as `0`), and every JSON number is a double, so an integer literal at or above 2**53 rounds the way JavaScript rounds it. `format_number` implements both from the shortest round-trip digits.
 2. **Strings.** Only `"`, `\`, control characters below U+0020 and lone surrogates are escaped; `/` and non-ASCII are not.
 3. **Key order.** Object members sort by UTF-16 code units, not code points. The vector with a supplementary-plane key exists for this.
 4. **Signing inputs.** Domain tag plus canonical JSON of the header (envelopes) or the core fields (receipts), nothing else.
@@ -65,7 +65,7 @@ pytest
 python -m frontier_shared.conformance
 ```
 
-Vectors are vendored under `src/frontier_shared/vectors/v1/`. They are immutable for version 1; a new vectors version is a new directory.
+Vectors are vendored under `src/frontier_shared/vectors/v2/` with the lock file from the JavaScript repository; a test fails if the copy drifts from the lock. A new vectors version is a new directory.
 
 ## License
 

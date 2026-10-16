@@ -8,7 +8,7 @@ from typing import Any
 
 from .canonical import canonical_json
 
-__all__ = ["HASH_PREFIX", "sha256_hex", "sha256_hex_bytes", "hash_payload", "hash_bytes", "hash_record", "is_hash_ref"]
+__all__ = ["HASH_PREFIX", "sha256_hex", "sha256_hex_bytes", "hash_payload", "hash_text", "hash_bytes", "hash_record", "is_hash_ref"]
 
 HASH_PREFIX = "sha256:"
 _HASH_REF = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -24,8 +24,18 @@ def sha256_hex_bytes(data: bytes) -> str:
 
 
 def hash_payload(payload: Any) -> str:
-    """Prefixed digest. Strings are hashed as-is; anything else in canonical JSON form."""
-    text = payload if isinstance(payload, str) else canonical_json(payload)
+    """Hash reference of any JSON value, always over its canonical JSON form.
+
+    A string payload is hashed as the JSON string (quoted), never as raw text, so an
+    object and the text of that object can never share a reference.
+    """
+    return HASH_PREFIX + sha256_hex(canonical_json(payload))
+
+
+def hash_text(text: str) -> str:
+    """Hash reference of raw UTF-8 text (not JSON-encoded)."""
+    if not isinstance(text, str):
+        raise TypeError("hash_text expects a string")
     return HASH_PREFIX + sha256_hex(text)
 
 
@@ -34,7 +44,8 @@ def hash_bytes(data: bytes) -> str:
 
 
 def hash_record(record: Any) -> str:
-    return hash_payload(canonical_json(record))
+    """Identical to hash_payload, kept for readability."""
+    return hash_payload(record)
 
 
 def is_hash_ref(value: Any) -> bool:

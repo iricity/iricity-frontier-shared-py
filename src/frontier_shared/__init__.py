@@ -5,17 +5,20 @@ proven by the shared conformance vectors in ``frontier_shared/vectors``.
 """
 
 from .base58 import base58_decode, base58_encode, multibase_decode_base58btc, multibase_encode_base58btc
-from .canonical import canonical_json
+from .canonical import MAX_DEPTH, canonical_json, format_number
 from .envelope import (
     ENVELOPE_DOMAIN_TAG,
     ENVELOPE_VERSION,
+    TIMESTAMP_PATTERN,
     create_envelope,
     envelope_hash,
     envelope_header,
+    envelope_id_from_hash,
     envelope_signing_input,
+    is_timestamp,
     verify_envelope,
 )
-from .hashing import HASH_PREFIX, hash_bytes, hash_payload, hash_record, is_hash_ref, sha256_hex, sha256_hex_bytes
+from .hashing import HASH_PREFIX, hash_bytes, hash_payload, hash_record, hash_text, is_hash_ref, sha256_hex, sha256_hex_bytes
 from .keys import (
     ED25519_MULTICODEC_PREFIX,
     KeyPair,
@@ -24,6 +27,7 @@ from .keys import (
     encode_signature,
     fingerprint_did,
     is_did_key,
+    is_valid_signature_text,
     public_key_bytes_from_did,
     public_key_multibase_from_did,
     resolve_signer,
@@ -36,17 +40,26 @@ from .receipt import (
     RECEIPT_VERSION,
     compute_receipt_hash,
     create_receipt_record,
+    derive_receipt_id,
     receipt_core,
     receipt_signing_input,
     verify_receipt_chain,
     verify_receipt_record,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "__version__",
     "canonical_json",
+    "format_number",
+    "MAX_DEPTH",
+    "hash_text",
+    "is_valid_signature_text",
+    "is_timestamp",
+    "TIMESTAMP_PATTERN",
+    "envelope_id_from_hash",
+    "derive_receipt_id",
     "HASH_PREFIX",
     "sha256_hex",
     "sha256_hex_bytes",

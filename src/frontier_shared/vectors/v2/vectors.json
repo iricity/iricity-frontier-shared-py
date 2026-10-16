@@ -1,0 +1,1174 @@
+{
+  "vectors_version": "2",
+  "generated_at": "2026-10-17T00:00:00.000Z",
+  "notes": [
+    "canonical_json follows RFC 8785 for all JSON values; inputs are stored with their original key order so unsorted serializers fail.",
+    "hash_payload references always cover canonical JSON: a string payload is hashed as the JSON string, never as raw text.",
+    "ed25519 vectors are RFC 8032 section 7.1 tests 1 and 2.",
+    "did_key framing is multicodec ed25519-pub (0xed 0x01) + base58btc with multibase prefix z; both directions are checked.",
+    "envelope and receipt signatures are deterministic: an independent implementation must reproduce them byte for byte.",
+    "rejections are objects a conforming verifier must report as verified=false.",
+    "An implementation conforms only when every suite passes and none is skipped."
+  ],
+  "canonical_json": [
+    {
+      "id": "rfc8785-sample",
+      "description": "RFC 8785 section 3.2 sample",
+      "input": {
+        "numbers": [
+          333333333.3333333,
+          1e+30,
+          4.5,
+          0.002,
+          1e-27
+        ],
+        "string": "€$\u000f\nA'B\"\\\\\"/",
+        "literals": [
+          null,
+          true,
+          false
+        ]
+      },
+      "expected_canonical": "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}",
+      "expected_hash": "sha256:2d5e01a318d0f0879ab568c4be289c8b1f64ef8921a53c6277d5e069978baacb"
+    },
+    {
+      "id": "empty-object",
+      "description": "empty object",
+      "input": {},
+      "expected_canonical": "{}",
+      "expected_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "id": "empty-array",
+      "description": "empty array",
+      "input": [],
+      "expected_canonical": "[]",
+      "expected_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "id": "nested-sorting",
+      "description": "keys sorted at every depth",
+      "input": {
+        "b": {
+          "z": 1,
+          "a": [
+            3,
+            {
+              "y": 2,
+              "x": 1
+            }
+          ]
+        },
+        "a": "x"
+      },
+      "expected_canonical": "{\"a\":\"x\",\"b\":{\"a\":[3,{\"x\":1,\"y\":2}],\"z\":1}}",
+      "expected_hash": "sha256:8e638c43a6e5831428f4f204ada3a113415ac86594681e29c751cd6db16fae1c"
+    },
+    {
+      "id": "unicode-key-order",
+      "description": "UTF-16 code unit ordering of keys",
+      "input": {
+        "é": 1,
+        "e": 2,
+        "A": 3,
+        "😀": 4,
+        "Ａ": 5
+      },
+      "expected_canonical": "{\"A\":3,\"e\":2,\"é\":1,\"😀\":4,\"Ａ\":5}",
+      "expected_hash": "sha256:ba37f18a9961538e4d8a07d5fede091c313794584c687df11fccd9afb064494b"
+    },
+    {
+      "id": "empty-string-key",
+      "description": "empty string sorts first",
+      "input": {
+        "b": 1,
+        "": 2,
+        "a": 3
+      },
+      "expected_canonical": "{\"\":2,\"a\":3,\"b\":1}",
+      "expected_hash": "sha256:b3e3709edfd5b68e758c194b2196d74ec6a91ac986cf1209d969801288b5d019"
+    },
+    {
+      "id": "numbers",
+      "description": "ECMAScript number formatting",
+      "input": {
+        "a": 1,
+        "b": 1e+21,
+        "c": 1e-7,
+        "e": 0.1,
+        "f": 123456789012345680000,
+        "g": 5e-324,
+        "h": 100,
+        "i": 0.000001,
+        "j": -1.5e-9
+      },
+      "expected_canonical": "{\"a\":1,\"b\":1e+21,\"c\":1e-7,\"e\":0.1,\"f\":123456789012345680000,\"g\":5e-324,\"h\":100,\"i\":0.000001,\"j\":-1.5e-9}",
+      "expected_hash": "sha256:d69e2a2ca893f773e7329cbb53440a7fcf43eadeb9d8184a2ae766c6d2bec1c4"
+    },
+    {
+      "id": "large-integers",
+      "description": "integers above 2^53 are doubles in JSON",
+      "input": {
+        "a": 9007199254740992,
+        "b": 1e+21,
+        "c": 1.2345678901234568e+29
+      },
+      "expected_canonical": "{\"a\":9007199254740992,\"b\":1e+21,\"c\":1.2345678901234568e+29}",
+      "expected_hash": "sha256:5f8ec274a9e9441621fbf62c883ee9c6af12cd4aef4d88c6ea512adebc5c3fc8"
+    },
+    {
+      "id": "escapes",
+      "description": "control characters and quotes",
+      "input": {
+        "s": "\u0000\u0001\u001f\"\\/\b\f\n\r\t"
+      },
+      "expected_canonical": "{\"s\":\"\\u0000\\u0001\\u001f\\\"\\\\/\\b\\f\\n\\r\\t\"}",
+      "expected_hash": "sha256:1dd7f6a1b54813e0bb0289845f49859f1600251334b8125c24c3dee58ba24a7e"
+    },
+    {
+      "id": "non-ascii-unescaped",
+      "description": "non-ASCII and slash are not escaped",
+      "input": {
+        "s": "héllo/wörld 😀"
+      },
+      "expected_canonical": "{\"s\":\"héllo/wörld 😀\"}",
+      "expected_hash": "sha256:6be8eebcecc45be3b40eb7e3c3cfcd5773816db4e71259cdc0ab3b73ce68390c"
+    },
+    {
+      "id": "nulls-and-booleans",
+      "description": "literals inside arrays and objects",
+      "input": {
+        "a": [
+          null,
+          true,
+          false,
+          0,
+          ""
+        ],
+        "b": null
+      },
+      "expected_canonical": "{\"a\":[null,true,false,0,\"\"],\"b\":null}",
+      "expected_hash": "sha256:d568f3cfb57ed725a88b322b78e33b99f10903b3cecd1df660498f7e55682018"
+    }
+  ],
+  "hash_payload": [
+    {
+      "id": "string-payload-is-quoted",
+      "input": "hello",
+      "expected_hash": "sha256:5aa762ae383fbb727af3c7a36d4940a5b8c40a989452d2304fc958ff3f354e7a"
+    },
+    {
+      "id": "string-that-looks-like-json",
+      "input": "{\"a\":1}",
+      "expected_hash": "sha256:3dc4eef510cec9eda1ca361042e8152bd62c44288af2d9cc465cc217c381facd"
+    },
+    {
+      "id": "object-payload",
+      "input": {
+        "a": 1
+      },
+      "expected_hash": "sha256:015abd7f5cc57a2dd94b7590f04ad8084273905ee33ec5cebeae62276a97f862"
+    },
+    {
+      "id": "number-payload",
+      "input": 42,
+      "expected_hash": "sha256:73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049"
+    },
+    {
+      "id": "null-payload",
+      "input": null,
+      "expected_hash": "sha256:74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "id": "array-payload",
+      "input": [
+        1,
+        "two",
+        {
+          "three": 3
+        }
+      ],
+      "expected_hash": "sha256:5638683081b5aceda62f960bcb919a2c773077b6fdcb2e434beba64c36d0f8d9"
+    }
+  ],
+  "base58btc": [
+    {
+      "id": "hello-world",
+      "input_hex": "48656c6c6f20576f726c6421",
+      "expected": "2NEpo7TZRRrLZSi2U"
+    },
+    {
+      "id": "leading-zeros",
+      "input_hex": "000001",
+      "expected": "112"
+    },
+    {
+      "id": "single-zero",
+      "input_hex": "00",
+      "expected": "1"
+    },
+    {
+      "id": "all-ff",
+      "input_hex": "ffffffff",
+      "expected": "7YXq9G"
+    },
+    {
+      "id": "multicodec-ed25519",
+      "input_hex": "ed01d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "expected": "6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw"
+    }
+  ],
+  "did_key": [
+    {
+      "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "expected_did": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw"
+    },
+    {
+      "public_key_hex": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+      "expected_did": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT"
+    },
+    {
+      "public_key_hex": "2e6fcce36701dc791488e0d0b1745cc1e33a4c1c9fcc41c63bd343dbbe0970e6",
+      "expected_did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      "source": "did:key specification Ed25519 example"
+    }
+  ],
+  "ed25519": [
+    {
+      "id": "rfc8032-test-1",
+      "seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+      "message_hex": "",
+      "expected_signature_hex": "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
+      "source": "RFC 8032 section 7.1"
+    },
+    {
+      "id": "rfc8032-test-2",
+      "seed_hex": "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+      "public_key_hex": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+      "message_hex": "72",
+      "expected_signature_hex": "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00",
+      "source": "RFC 8032 section 7.1"
+    }
+  ],
+  "envelope": [
+    {
+      "id": "envelope-omm",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "payload_type": "ccsds.omm.json/1",
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "previous_envelope_hash": null,
+      "payload": {
+        "OBJECT_NAME": "ISS (ZARYA)",
+        "OBJECT_ID": "1998-067A",
+        "EPOCH": "2026-01-01T00:00:00.000000",
+        "MEAN_MOTION": 15.5,
+        "ECCENTRICITY": 0.0005,
+        "INCLINATION": 51.64,
+        "RA_OF_ASC_NODE": 10,
+        "ARG_OF_PERICENTER": 20,
+        "MEAN_ANOMALY": 30,
+        "EPHEMERIS_TYPE": 0,
+        "CLASSIFICATION_TYPE": "U",
+        "NORAD_CAT_ID": 25544,
+        "ELEMENT_SET_NO": 999,
+        "REV_AT_EPOCH": 1,
+        "BSTAR": 0.0001,
+        "MEAN_MOTION_DOT": 0.00001,
+        "MEAN_MOTION_DDOT": 0
+      },
+      "expected": {
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "signature_value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+      }
+    },
+    {
+      "id": "envelope-chained",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "payload_type": "opaque.json/1",
+      "created_at": "2026-01-01T00:00:01.000Z",
+      "previous_envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+      "payload": {
+        "hello": "world",
+        "n": [
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "payload_hash": "sha256:4f9362490869efe87fa96adc1c670eaff9525089882fac78028731e6ce031f66",
+        "envelope_hash": "sha256:f1ac0e1118ec1c31cc111cba3407648ea0aadc9052b2e6cbef951c1a2f2b65d0",
+        "envelope_id": "env_f1ac0e1118ec1c31cc111cba",
+        "signature_value": "rObyUEx1NTy35YjWWdn8lTbuH6NOxMFe6TfnnM76XfojTbjsCr-u_EYuMkUfq5XTyU2-0BC_oKsWca04QbysBg"
+      }
+    },
+    {
+      "id": "envelope-detached-string",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "payload_type": "opaque.json/1",
+      "created_at": "2026-01-01T00:00:02.000Z",
+      "previous_envelope_hash": null,
+      "detached": true,
+      "payload": "a bare string payload",
+      "expected": {
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "payload_hash": "sha256:244fce647c652821a0efdf33b8db2d8fa7a7f8e206087a5e0bcea8eb4e442200",
+        "envelope_hash": "sha256:63418e29204741087f32a12cd706df7db9a016caadaf96c18a18945e4b63a99c",
+        "envelope_id": "env_63418e29204741087f32a12c",
+        "signature_value": "w8UTBayYt967WyYJiC4PskJHfr-rg65EyOZZ-_VA7-qfF1kuUyGPf4WObmIjJHVi0A6Pa2ZmS8KBIinGN6hwCg"
+      }
+    }
+  ],
+  "receipt": [
+    {
+      "id": "receipt-signed-genesis",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "record": {
+        "record_type": "entity",
+        "entity_id": "NODE-1",
+        "entity_type": "node",
+        "created_at": "2026-01-01T00:00:00Z"
+      },
+      "previous_hash": null,
+      "timestamp": "2026-01-01T00:00:02.000Z",
+      "expected": {
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-signed-chained",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "record": {
+        "record_type": "entity",
+        "entity_id": "NODE-1",
+        "entity_type": "node",
+        "created_at": "2026-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "previous_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+      "timestamp": "2026-01-01T00:00:03.000Z",
+      "expected": {
+        "receipt_id": "rcp_02b1e28be7233128d59b402f",
+        "record_hash": "sha256:cee30f52cc2d85ca6cfcd34816332834860119c5ca50c5e42bf68e29a897d9d4",
+        "previous_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "receipt_hash": "sha256:d3cbf9212fec0afb9d36b7bf1d8ed85fbe5973ae00db14cc68c18739630099a1",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "signature": "bDCGeyQtYCMmQb1tQlWAAxHxDu3RelCwTwnaIq9uaBJPORYRs2JWKpFNTayFPyRW9z0U7EtO_adXV0fxjNRmBw",
+        "signature_algorithm": "ed25519",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-unsigned",
+      "issuer": "iricity-state-stack",
+      "record": {
+        "record_type": "entity",
+        "entity_id": "NODE-1",
+        "entity_type": "node",
+        "created_at": "2026-01-01T00:00:00Z"
+      },
+      "previous_hash": null,
+      "timestamp": "2026-01-01T00:00:04.000Z",
+      "expected": {
+        "receipt_id": "rcp_72a09262cb3d73fcd50a94b2",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "receipt_hash": "sha256:f1fa372681fe56d32cd2d5fce0a76a33958a3ff9591960c0ca315c7ec7d48fca",
+        "issuer": "iricity-state-stack",
+        "signature": null,
+        "signature_algorithm": "none",
+        "verification_status": "unsigned"
+      }
+    },
+    {
+      "id": "receipt-legacy-chain-digest",
+      "legacy": true,
+      "record": {
+        "record_type": "entity",
+        "entity_id": "NODE-1",
+        "entity_type": "node",
+        "created_at": "2026-01-01T00:00:00Z"
+      },
+      "receipt": {
+        "record_type": "receipt",
+        "receipt_id": "rcp_5d9cef0e9e1211c1",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:05.000Z",
+        "issuer": "legacy-registry",
+        "signature": "44b7f3a4591c6ce9587092f73b0100a320d69da854ed9646035c3bc588246e91",
+        "signature_algorithm": "sha256_chain_legacy",
+        "verification_status": "issued"
+      },
+      "expected": {
+        "verified": true
+      }
+    }
+  ],
+  "rejections": [
+    {
+      "id": "envelope-payload-tampered",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 1,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-signer-swapped",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-signature-corrupted",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqAA"
+        }
+      }
+    },
+    {
+      "id": "envelope-key-id-mismatch",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-hash-altered",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-id-altered",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_000000000000000000000000",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-version-unknown",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/9",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-previous-link-altered",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "opaque.json/1",
+        "payload_hash": "sha256:4f9362490869efe87fa96adc1c670eaff9525089882fac78028731e6ce031f66",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:01.000Z",
+        "previous_envelope_hash": "sha256:63418e29204741087f32a12cd706df7db9a016caadaf96c18a18945e4b63a99c",
+        "envelope_hash": "sha256:f1ac0e1118ec1c31cc111cba3407648ea0aadc9052b2e6cbef951c1a2f2b65d0",
+        "envelope_id": "env_f1ac0e1118ec1c31cc111cba",
+        "payload": {
+          "hello": "world",
+          "n": [
+            1,
+            2,
+            3
+          ]
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "rObyUEx1NTy35YjWWdn8lTbuH6NOxMFe6TfnnM76XfojTbjsCr-u_EYuMkUfq5XTyU2-0BC_oKsWca04QbysBg"
+        }
+      }
+    },
+    {
+      "id": "envelope-signature-missing",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        }
+      }
+    },
+    {
+      "id": "envelope-signature-padded-encoding",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw=="
+        }
+      }
+    },
+    {
+      "id": "envelope-created-at-not-utc",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00+05:30",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      }
+    },
+    {
+      "id": "envelope-expected-signer-other",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      },
+      "options": {
+        "expected_signer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT"
+      }
+    },
+    {
+      "id": "envelope-payload-type-not-allowed",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "ccsds.omm.json/1",
+        "payload_hash": "sha256:893f4980c47a188191a8afed1eb7e40ec23edbecb9e860a69b54c1ed365b00c0",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:f21f12a1224b84801bc0b0a95b7cbf4cd7def7018a3d1f29ce4e15af3d1a48a9",
+        "envelope_id": "env_f21f12a1224b84801bc0b0a9",
+        "payload": {
+          "OBJECT_NAME": "ISS (ZARYA)",
+          "OBJECT_ID": "1998-067A",
+          "EPOCH": "2026-01-01T00:00:00.000000",
+          "MEAN_MOTION": 15.5,
+          "ECCENTRICITY": 0.0005,
+          "INCLINATION": 51.64,
+          "RA_OF_ASC_NODE": 10,
+          "ARG_OF_PERICENTER": 20,
+          "MEAN_ANOMALY": 30,
+          "EPHEMERIS_TYPE": 0,
+          "CLASSIFICATION_TYPE": "U",
+          "NORAD_CAT_ID": 25544,
+          "ELEMENT_SET_NO": 999,
+          "REV_AT_EPOCH": 1,
+          "BSTAR": 0.0001,
+          "MEAN_MOTION_DOT": 0.00001,
+          "MEAN_MOTION_DDOT": 0
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "vH5U-kOt-Jp5x31th-w4gMNec6iNnAQRRFfwidvMjy4fx6HNK9SeO2I1GnB1B7eADpT4JX4dGSkKHoQwkfhqBw"
+        }
+      },
+      "options": {
+        "allowed_payload_types": [
+          "opaque.json/1"
+        ]
+      }
+    },
+    {
+      "id": "envelope-detached-wrong-payload",
+      "kind": "envelope",
+      "object": {
+        "envelope_version": "state-envelope/1",
+        "payload_type": "opaque.json/1",
+        "payload_hash": "sha256:244fce647c652821a0efdf33b8db2d8fa7a7f8e206087a5e0bcea8eb4e442200",
+        "signer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "created_at": "2026-01-01T00:00:02.000Z",
+        "previous_envelope_hash": null,
+        "envelope_hash": "sha256:63418e29204741087f32a12cd706df7db9a016caadaf96c18a18945e4b63a99c",
+        "envelope_id": "env_63418e29204741087f32a12c",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "value": "w8UTBayYt967WyYJiC4PskJHfr-rg65EyOZZ-_VA7-qfF1kuUyGPf4WObmIjJHVi0A6Pa2ZmS8KBIinGN6hwCg"
+        }
+      },
+      "options": {
+        "payload": "a different string"
+      }
+    },
+    {
+      "id": "receipt-record-hash-tampered",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:e8c2235999aa8037374c59815ca903ce42f6cbbb2b20ae07f3fcf3ce471324e7",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-issuer-swapped",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-signature-corrupted",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciAA",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-signature-stripped",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": null,
+        "signature_algorithm": "none",
+        "key_id": null,
+        "verification_status": "unsigned"
+      }
+    },
+    {
+      "id": "receipt-id-altered",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_000000000000000000000000",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-hash-altered",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-version-unknown",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/9",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-previous-link-broken",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_02b1e28be7233128d59b402f",
+        "record_hash": "sha256:cee30f52cc2d85ca6cfcd34816332834860119c5ca50c5e42bf68e29a897d9d4",
+        "previous_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "timestamp": "2026-01-01T00:00:03.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:d3cbf9212fec0afb9d36b7bf1d8ed85fbe5973ae00db14cc68c18739630099a1",
+        "signature": "bDCGeyQtYCMmQb1tQlWAAxHxDu3RelCwTwnaIq9uaBJPORYRs2JWKpFNTayFPyRW9z0U7EtO_adXV0fxjNRmBw",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      },
+      "options": {
+        "previous_receipt": {
+          "record_type": "receipt",
+          "receipt_version": "state-receipt/1",
+          "receipt_id": "rcp_72a09262cb3d73fcd50a94b2",
+          "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+          "previous_hash": null,
+          "timestamp": "2026-01-01T00:00:04.000Z",
+          "issuer": "iricity-state-stack",
+          "receipt_hash": "sha256:f1fa372681fe56d32cd2d5fce0a76a33958a3ff9591960c0ca315c7ec7d48fca",
+          "signature": null,
+          "signature_algorithm": "none",
+          "key_id": null,
+          "verification_status": "unsigned"
+        }
+      }
+    },
+    {
+      "id": "receipt-wrong-record",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      },
+      "options": {
+        "record": {
+          "record_type": "entity",
+          "entity_id": "NODE-2",
+          "entity_type": "node",
+          "created_at": "2026-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "receipt-expected-issuer-other",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_517bc160aff16538a60ecd95",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:02.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:9da12efda3e745707fe97b60d3a7e6d60371a7dadd00e898297a81ac0fd6ab6f",
+        "signature": "Il7Z4VrSu7PLyC0_j02s6nQBi8VLwcHfvS2PB7olh-CNU7Ib37KyAX8COijdPHHw2GrESVENP81OcfRIZMciCQ",
+        "signature_algorithm": "ed25519",
+        "key_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_status": "issued"
+      },
+      "options": {
+        "expected_issuer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT"
+      }
+    },
+    {
+      "id": "receipt-unsigned-claims-issued",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_72a09262cb3d73fcd50a94b2",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:04.000Z",
+        "issuer": "iricity-state-stack",
+        "receipt_hash": "sha256:f1fa372681fe56d32cd2d5fce0a76a33958a3ff9591960c0ca315c7ec7d48fca",
+        "signature": null,
+        "signature_algorithm": "none",
+        "key_id": null,
+        "verification_status": "issued"
+      }
+    },
+    {
+      "id": "receipt-unsigned-did-issuer",
+      "kind": "receipt",
+      "object": {
+        "record_type": "receipt",
+        "receipt_version": "state-receipt/1",
+        "receipt_id": "rcp_72a09262cb3d73fcd50a94b2",
+        "record_hash": "sha256:5d9cef0e9e1211c19a25655fc29d87e1fa0838063e59956cccf5d3714737c8b5",
+        "previous_hash": null,
+        "timestamp": "2026-01-01T00:00:04.000Z",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "receipt_hash": "sha256:f1fa372681fe56d32cd2d5fce0a76a33958a3ff9591960c0ca315c7ec7d48fca",
+        "signature": null,
+        "signature_algorithm": "none",
+        "key_id": null,
+        "verification_status": "unsigned"
+      }
+    }
+  ]
+}

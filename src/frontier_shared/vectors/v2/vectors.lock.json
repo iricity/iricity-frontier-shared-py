@@ -1,0 +1,5 @@
+{
+  "vectors_version": "2",
+  "sha256": "07c7848d2a5fbdaa743986502aeb32717b9d60f4baf13772ee5322c7e111df19",
+  "note": "SHA-256 of conformance/vectors.json with LF line endings. Immutable for this vectors_version; a change to the vectors is a new version, never an edit."
+}

@@ -2,11 +2,14 @@
 
 Rules implemented:
 - object members sorted by the UTF-16 code units of their names
-- numbers serialized with the ECMAScript Number-to-string algorithm
+- numbers serialized with the ECMAScript Number-to-string algorithm; every number
+  is a double, so integers beyond 2**53 are rounded exactly as JavaScript rounds them
 - strings escaped exactly as ECMAScript JSON.stringify escapes them
 - no insignificant whitespace
 
-Non-finite floats are rejected: a canonical form must be unambiguous.
+Rejected, because a canonical form must be unambiguous and a verifier must not be
+crashable: non-finite floats, non-string keys, non-JSON values, nesting deeper than
+MAX_DEPTH.
 """
 
 from __future__ import annotations
@@ -15,7 +18,10 @@ import math
 from decimal import Decimal
 from typing import Any
 
-__all__ = ["canonical_json", "format_number"]
+__all__ = ["canonical_json", "format_number", "MAX_DEPTH"]
+
+MAX_DEPTH = 256
+_MAX_SAFE_INTEGER = 2**53
 
 
 def format_number(value: float | int) -> str:
@@ -23,7 +29,10 @@ def format_number(value: float | int) -> str:
     if isinstance(value, bool):
         raise TypeError("booleans are not numbers")
     if isinstance(value, int):
-        return str(value)
+        if abs(value) < _MAX_SAFE_INTEGER:
+            return str(value)
+        # JSON has only doubles: a larger integer literal is the nearest double.
+        value = float(value)
     if not isinstance(value, float):
         raise TypeError(f"not a number: {type(value).__name__}")
     if math.isnan(value) or math.isinf(value):
@@ -91,7 +100,9 @@ def _key_order(name: Any) -> bytes:
     return name.encode("utf-16-be", "surrogatepass")
 
 
-def _serialize(value: Any, path: str) -> str:
+def _serialize(value: Any, path: str, depth: int) -> str:
+    if depth > MAX_DEPTH:
+        raise TypeError(f"canonical_json: nesting deeper than {MAX_DEPTH} at {path}")
     if value is None:
         return "null"
     if value is True:
@@ -106,17 +117,15 @@ def _serialize(value: Any, path: str) -> str:
         except ValueError as error:
             raise ValueError(f"{error} at {path}") from None
     if isinstance(value, (list, tuple)):
-        return "[" + ",".join(_serialize(item, f"{path}[{index}]") for index, item in enumerate(value)) + "]"
+        return "[" + ",".join(_serialize(item, f"{path}[{index}]", depth + 1) for index, item in enumerate(value)) + "]"
     if isinstance(value, dict):
         members = []
         for key in sorted(value.keys(), key=_key_order):
-            if not isinstance(key, str):
-                raise TypeError(f"canonical_json: object keys must be strings at {path}")
-            members.append(_escape_string(key) + ":" + _serialize(value[key], f"{path}.{key}"))
+            members.append(_escape_string(key) + ":" + _serialize(value[key], f"{path}.{key}", depth + 1))
         return "{" + ",".join(members) + "}"
     raise TypeError(f"canonical_json: unsupported value {type(value).__name__} at {path}")
 
 
 def canonical_json(value: Any) -> str:
     """Return the RFC 8785 canonical JSON text of a JSON-compatible Python value."""
-    return _serialize(value, "$")
+    return _serialize(value, "$", 0)
