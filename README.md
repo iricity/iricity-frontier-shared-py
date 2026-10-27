@@ -57,6 +57,10 @@ Four places decide whether a second implementation matches the bytes, and all fo
 3. **Key order.** Object members sort by UTF-16 code units, not code points. The vector with a supplementary-plane key exists for this.
 4. **Signing inputs.** Domain tag plus canonical JSON of the header (envelopes) or the core fields (receipts), nothing else.
 
+## Not yet in this implementation
+
+The JavaScript reference 0.4.0 adds regulator-issued authorization credentials (W3C Verifiable Credentials with an `eddsa-jcs-2022` Data Integrity proof). This package covers the protocol core (canonical JSON, hashes, did:key, envelopes, receipts) and passes conformance vectors version 2 in full; credentials arrive here together with vector version 3, so that both implementations are measured against the same cases.
+
 ## Development
 
 ```
