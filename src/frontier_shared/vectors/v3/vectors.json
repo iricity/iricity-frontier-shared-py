@@ -1,12 +1,13 @@
 {
-  "vectors_version": "2",
-  "generated_at": "2026-10-17T00:00:00.000Z",
+  "vectors_version": "3",
+  "generated_at": "2026-10-27T00:00:00.000Z",
   "notes": [
     "canonical_json follows RFC 8785 for all JSON values; inputs are stored with their original key order so unsorted serializers fail.",
     "hash_payload references always cover canonical JSON: a string payload is hashed as the JSON string, never as raw text.",
     "ed25519 vectors are RFC 8032 section 7.1 tests 1 and 2.",
     "did_key framing is multicodec ed25519-pub (0xed 0x01) + base58btc with multibase prefix z; both directions are checked.",
     "envelope and receipt signatures are deterministic: an independent implementation must reproduce them byte for byte.",
+    "credential vectors are W3C Verifiable Credentials (Data Model 2.0) secured with the eddsa-jcs-2022 Data Integrity cryptosuite: hash_data is sha256(canonical proof options with the document context) followed by sha256(canonical document without proof); proofValue is the multibase base58btc Ed25519 signature; the authorization case binds a record to its credential.",
     "rejections are objects a conforming verifier must report as verified=false.",
     "An implementation conforms only when every suite passes and none is skipped."
   ],
@@ -415,6 +416,187 @@
       },
       "expected": {
         "verified": true
+      }
+    }
+  ],
+  "credential": [
+    {
+      "id": "credential-transmit-licence",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "authorization": {
+        "subject_id": "station_vu2abc",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z"
+      },
+      "created": "2026-01-01T00:00:00.000Z",
+      "at": "2027-01-01T00:00:00.000Z",
+      "expected": {
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_method": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "proof_value": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1",
+        "hash_data_hex": "26df305c1c53e3004de6e065c5196e82b40ffcd6907bee879cc9fd665eb373c7b404a01bc99d2490a4c75e934a803cc8e2568b28e52471e00387e9174ae385a3",
+        "credential_subject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        }
+      }
+    },
+    {
+      "id": "credential-receive-explicit-id",
+      "signer_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "authorization": {
+        "subject_id": "station_vu2xyz",
+        "capability": "receive",
+        "jurisdiction": "IN",
+        "valid_from": "2026-01-01T00:00:00.000Z"
+      },
+      "created": "2026-01-02T00:00:00.000Z",
+      "credential_id": "urn:example:credential:receive-1",
+      "at": "2026-06-01T00:00:00.000Z",
+      "expected": {
+        "id": "urn:example:credential:receive-1",
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "verification_method": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "proof_value": "z5kSBRixdXB7PoGGddyaKou5SCP3wWiDHYfxhwpAVmij5URLts9U2t4MDiTAgBZDTVaL9kFgY1WoW9wteLUu4xWZd",
+        "hash_data_hex": "4533590f9bad52c5c6a55f30075eba9a951db37718c226756f406dccc854e4d9412fbf5a233c95808a2d70279a47b9f4f11ae8c241536f4408e9aba4c4d28faf",
+        "credential_subject": {
+          "id": "station_vu2xyz",
+          "capability": "receive",
+          "jurisdiction": "IN"
+        }
+      }
+    },
+    {
+      "id": "authorization-regulator-issued-binds",
+      "authorization_record": {
+        "authorization_id": "auth_b54e1a8329d3b4634b5d7451",
+        "record_type": "authorization",
+        "subject_id": "station_vu2abc",
+        "controller_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "profile": "regulator_issued",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z",
+        "revoked": false,
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "proof": {
+          "@context": [
+            "https://www.w3.org/ns/credentials/v2",
+            {
+              "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+            }
+          ],
+          "type": [
+            "VerifiableCredential",
+            "SpectrumAuthorizationCredential"
+          ],
+          "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "validFrom": "2026-01-01T00:00:00.000Z",
+          "validUntil": "2031-01-01T00:00:00.000Z",
+          "credentialSubject": {
+            "id": "station_vu2abc",
+            "capability": "transmit",
+            "scope": "amateur_general_grade",
+            "jurisdiction": "IN",
+            "bands": [
+              {
+                "lower_hz": 144000000,
+                "upper_hz": 146000000,
+                "service": "amateur"
+              },
+              {
+                "lower_hz": 434000000,
+                "upper_hz": 438000000,
+                "service": "amateur"
+              }
+            ],
+            "max_eirp_dbw": 20,
+            "location": {
+              "latitude": 28.6139,
+              "longitude": 77.209,
+              "radius_km": 1
+            },
+            "license_reference": "ASOC/EXAMPLE/0001"
+          },
+          "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+          "proof": {
+            "type": "DataIntegrityProof",
+            "cryptosuite": "eddsa-jcs-2022",
+            "created": "2026-01-01T00:00:00.000Z",
+            "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+            "proofPurpose": "assertionMethod",
+            "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+          }
+        }
+      },
+      "at": "2028-01-01T00:00:00.000Z",
+      "expected": {
+        "verified": true,
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw"
       }
     }
   ],
@@ -1168,6 +1350,764 @@
         "signature_algorithm": "none",
         "key_id": null,
         "verification_status": "unsigned"
+      }
+    },
+    {
+      "id": "credential-subject-tampered",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 30,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-issuer-swapped",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-proof-value-corrupted",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSN11"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-cryptosuite-unknown",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-rdfc-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-proof-created-not-utc",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T05:30:00+05:30",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-expired",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2031-06-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-not-yet-valid",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2025-06-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "credential-expected-issuer-other",
+      "kind": "credential",
+      "object": {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          {
+            "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+          }
+        ],
+        "type": [
+          "VerifiableCredential",
+          "SpectrumAuthorizationCredential"
+        ],
+        "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "validFrom": "2026-01-01T00:00:00.000Z",
+        "validUntil": "2031-01-01T00:00:00.000Z",
+        "credentialSubject": {
+          "id": "station_vu2abc",
+          "capability": "transmit",
+          "scope": "amateur_general_grade",
+          "jurisdiction": "IN",
+          "bands": [
+            {
+              "lower_hz": 144000000,
+              "upper_hz": 146000000,
+              "service": "amateur"
+            },
+            {
+              "lower_hz": 434000000,
+              "upper_hz": 438000000,
+              "service": "amateur"
+            }
+          ],
+          "max_eirp_dbw": 20,
+          "location": {
+            "latitude": 28.6139,
+            "longitude": 77.209,
+            "radius_km": 1
+          },
+          "license_reference": "ASOC/EXAMPLE/0001"
+        },
+        "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+        "proof": {
+          "type": "DataIntegrityProof",
+          "cryptosuite": "eddsa-jcs-2022",
+          "created": "2026-01-01T00:00:00.000Z",
+          "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "proofPurpose": "assertionMethod",
+          "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z",
+        "expected_issuer": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT"
+      }
+    },
+    {
+      "id": "authorization-band-widened",
+      "kind": "authorization",
+      "object": {
+        "authorization_id": "auth_b54e1a8329d3b4634b5d7451",
+        "record_type": "authorization",
+        "subject_id": "station_vu2abc",
+        "controller_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "profile": "regulator_issued",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 1240000000,
+            "upper_hz": 1300000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z",
+        "revoked": false,
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "proof": {
+          "@context": [
+            "https://www.w3.org/ns/credentials/v2",
+            {
+              "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+            }
+          ],
+          "type": [
+            "VerifiableCredential",
+            "SpectrumAuthorizationCredential"
+          ],
+          "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "validFrom": "2026-01-01T00:00:00.000Z",
+          "validUntil": "2031-01-01T00:00:00.000Z",
+          "credentialSubject": {
+            "id": "station_vu2abc",
+            "capability": "transmit",
+            "scope": "amateur_general_grade",
+            "jurisdiction": "IN",
+            "bands": [
+              {
+                "lower_hz": 144000000,
+                "upper_hz": 146000000,
+                "service": "amateur"
+              },
+              {
+                "lower_hz": 434000000,
+                "upper_hz": 438000000,
+                "service": "amateur"
+              }
+            ],
+            "max_eirp_dbw": 20,
+            "location": {
+              "latitude": 28.6139,
+              "longitude": 77.209,
+              "radius_km": 1
+            },
+            "license_reference": "ASOC/EXAMPLE/0001"
+          },
+          "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+          "proof": {
+            "type": "DataIntegrityProof",
+            "cryptosuite": "eddsa-jcs-2022",
+            "created": "2026-01-01T00:00:00.000Z",
+            "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+            "proofPurpose": "assertionMethod",
+            "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+          }
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "authorization-controller-not-issuer",
+      "kind": "authorization",
+      "object": {
+        "authorization_id": "auth_b54e1a8329d3b4634b5d7451",
+        "record_type": "authorization",
+        "subject_id": "station_vu2abc",
+        "controller_id": "did:key:z6MkiaMbhXHNA4eJVCCj8dbzKzTgYDKf6crKgHVHid1F1WCT",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "profile": "regulator_issued",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z",
+        "revoked": false,
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "proof": {
+          "@context": [
+            "https://www.w3.org/ns/credentials/v2",
+            {
+              "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+            }
+          ],
+          "type": [
+            "VerifiableCredential",
+            "SpectrumAuthorizationCredential"
+          ],
+          "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "validFrom": "2026-01-01T00:00:00.000Z",
+          "validUntil": "2031-01-01T00:00:00.000Z",
+          "credentialSubject": {
+            "id": "station_vu2abc",
+            "capability": "transmit",
+            "scope": "amateur_general_grade",
+            "jurisdiction": "IN",
+            "bands": [
+              {
+                "lower_hz": 144000000,
+                "upper_hz": 146000000,
+                "service": "amateur"
+              },
+              {
+                "lower_hz": 434000000,
+                "upper_hz": 438000000,
+                "service": "amateur"
+              }
+            ],
+            "max_eirp_dbw": 20,
+            "location": {
+              "latitude": 28.6139,
+              "longitude": 77.209,
+              "radius_km": 1
+            },
+            "license_reference": "ASOC/EXAMPLE/0001"
+          },
+          "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+          "proof": {
+            "type": "DataIntegrityProof",
+            "cryptosuite": "eddsa-jcs-2022",
+            "created": "2026-01-01T00:00:00.000Z",
+            "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+            "proofPurpose": "assertionMethod",
+            "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+          }
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "authorization-proof-missing",
+      "kind": "authorization",
+      "object": {
+        "authorization_id": "auth_b54e1a8329d3b4634b5d7451",
+        "record_type": "authorization",
+        "subject_id": "station_vu2abc",
+        "controller_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "profile": "regulator_issued",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z",
+        "revoked": false,
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "proof": null
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "authorization-subject-swapped",
+      "kind": "authorization",
+      "object": {
+        "authorization_id": "auth_b54e1a8329d3b4634b5d7451",
+        "record_type": "authorization",
+        "subject_id": "station_other",
+        "controller_id": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+        "capability": "transmit",
+        "scope": "amateur_general_grade",
+        "profile": "regulator_issued",
+        "jurisdiction": "IN",
+        "bands": [
+          {
+            "lower_hz": 144000000,
+            "upper_hz": 146000000,
+            "service": "amateur"
+          },
+          {
+            "lower_hz": 434000000,
+            "upper_hz": 438000000,
+            "service": "amateur"
+          }
+        ],
+        "max_eirp_dbw": 20,
+        "location": {
+          "latitude": 28.6139,
+          "longitude": 77.209,
+          "radius_km": 1
+        },
+        "valid_from": "2026-01-01T00:00:00.000Z",
+        "valid_until": "2031-01-01T00:00:00.000Z",
+        "revoked": false,
+        "license_reference": "ASOC/EXAMPLE/0001",
+        "proof": {
+          "@context": [
+            "https://www.w3.org/ns/credentials/v2",
+            {
+              "@vocab": "urn:frontier-state-protocol:vocab:authorization#"
+            }
+          ],
+          "type": [
+            "VerifiableCredential",
+            "SpectrumAuthorizationCredential"
+          ],
+          "issuer": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+          "validFrom": "2026-01-01T00:00:00.000Z",
+          "validUntil": "2031-01-01T00:00:00.000Z",
+          "credentialSubject": {
+            "id": "station_vu2abc",
+            "capability": "transmit",
+            "scope": "amateur_general_grade",
+            "jurisdiction": "IN",
+            "bands": [
+              {
+                "lower_hz": 144000000,
+                "upper_hz": 146000000,
+                "service": "amateur"
+              },
+              {
+                "lower_hz": 434000000,
+                "upper_hz": 438000000,
+                "service": "amateur"
+              }
+            ],
+            "max_eirp_dbw": 20,
+            "location": {
+              "latitude": 28.6139,
+              "longitude": 77.209,
+              "radius_km": 1
+            },
+            "license_reference": "ASOC/EXAMPLE/0001"
+          },
+          "id": "urn:frontier-state-protocol:credential:6e3508e91bfadebeab38e2396b2cfe5c",
+          "proof": {
+            "type": "DataIntegrityProof",
+            "cryptosuite": "eddsa-jcs-2022",
+            "created": "2026-01-01T00:00:00.000Z",
+            "verificationMethod": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw#z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+            "proofPurpose": "assertionMethod",
+            "proofValue": "z49m7SSAfgRdRSagozPDibqbatxF6QpCTi64YBDV6WLD2MubjhC13u9mJ1ChQo6bt19gkAzWFoh5fiYsgRSYBSNz1"
+          }
+        }
+      },
+      "options": {
+        "at": "2027-01-01T00:00:00.000Z"
       }
     }
   ]

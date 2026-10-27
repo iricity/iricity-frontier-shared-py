@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "iricity-frontier-shared"
-version = "0.3.0"
-description = "Python implementation of the Frontier State Protocol primitives: RFC 8785 canonical JSON, SHA-256 hashing, ed25519 identity as did:key, signed envelopes and signed receipt chains, verified against the published conformance vectors."
+version = "0.5.0"
+description = "Python implementation of the Frontier State Protocol primitives: RFC 8785 canonical JSON, SHA-256 hashing, ed25519 identity as did:key, signed envelopes, signed receipt chains and regulator-issued authorization credentials (eddsa-jcs-2022), verified against the published conformance vectors."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -44,7 +44,7 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-frontier_shared = ["vectors/v2/*.json"]
+frontier_shared = ["vectors/v3/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

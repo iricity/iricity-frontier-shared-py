@@ -6,6 +6,20 @@ proven by the shared conformance vectors in ``frontier_shared/vectors``.
 
 from .base58 import base58_decode, base58_encode, multibase_decode_base58btc, multibase_encode_base58btc
 from .canonical import MAX_DEPTH, canonical_json, format_number
+from .credential import (
+    AUTHORIZATION_CREDENTIAL_TYPE,
+    AUTHORIZATION_VOCAB,
+    CREDENTIAL_CONTEXT_V2,
+    CREDENTIAL_SUBJECT_FIELDS,
+    CRYPTOSUITE,
+    DATA_INTEGRITY_PROOF,
+    PROOF_PURPOSE,
+    credential_hash_data,
+    credential_subject_from_authorization,
+    issue_authorization_credential,
+    verify_authorization_credential,
+    verify_credential,
+)
 from .envelope import (
     ENVELOPE_DOMAIN_TAG,
     ENVELOPE_VERSION,
@@ -47,10 +61,22 @@ from .receipt import (
     verify_receipt_record,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "__version__",
+    "issue_authorization_credential",
+    "verify_credential",
+    "verify_authorization_credential",
+    "credential_hash_data",
+    "credential_subject_from_authorization",
+    "CREDENTIAL_CONTEXT_V2",
+    "AUTHORIZATION_VOCAB",
+    "AUTHORIZATION_CREDENTIAL_TYPE",
+    "CREDENTIAL_SUBJECT_FIELDS",
+    "CRYPTOSUITE",
+    "DATA_INTEGRITY_PROOF",
+    "PROOF_PURPOSE",
     "canonical_json",
     "format_number",
     "MAX_DEPTH",

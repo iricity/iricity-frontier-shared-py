@@ -10,7 +10,8 @@ Python implementation of the Frontier State Protocol primitives, byte-for-byte c
 | `frontier_shared.keys` | `KeyPair`, `did_from_public_key_bytes`, `sign_bytes`, `verify_bytes` | W3C did:key, RFC 8032 Ed25519 |
 | `frontier_shared.envelope` | `create_envelope`, `verify_envelope` | `state-envelope/1` |
 | `frontier_shared.receipt` | `create_receipt_record`, `verify_receipt_record`, `verify_receipt_chain` | `state-receipt/1` |
-| `frontier_shared.conformance` | `run_conformance`, console script `frontier-shared-conformance` | vectors version 2, eight suites |
+| `frontier_shared.credential` | `issue_authorization_credential`, `verify_credential`, `verify_authorization_credential`, `credential_hash_data` | regulator-issued authorizations: W3C Verifiable Credentials with an `eddsa-jcs-2022` Data Integrity proof |
+| `frontier_shared.conformance` | `run_conformance`, console script `frontier-shared-conformance` | vectors version 3, nine suites |
 
 Only runtime dependency: `cryptography`.
 
@@ -57,9 +58,22 @@ Four places decide whether a second implementation matches the bytes, and all fo
 3. **Key order.** Object members sort by UTF-16 code units, not code points. The vector with a supplementary-plane key exists for this.
 4. **Signing inputs.** Domain tag plus canonical JSON of the header (envelopes) or the core fields (receipts), nothing else.
 
-## Not yet in this implementation
+## Credentials
 
-The JavaScript reference 0.4.0 adds regulator-issued authorization credentials (W3C Verifiable Credentials with an `eddsa-jcs-2022` Data Integrity proof). This package covers the protocol core (canonical JSON, hashes, did:key, envelopes, receipts) and passes conformance vectors version 2 in full; credentials arrive here together with vector version 3, so that both implementations are measured against the same cases.
+```python
+from frontier_shared import KeyPair, issue_authorization_credential, verify_credential, verify_authorization_credential
+
+regulator = KeyPair.generate()
+credential = issue_authorization_credential(
+    {"subject_id": "station_vu2abc", "capability": "transmit", "jurisdiction": "IN",
+     "bands": [{"lower_hz": 144_000_000, "upper_hz": 146_000_000, "service": "amateur"}],
+     "max_eirp_dbw": 20, "valid_from": "2026-01-01T00:00:00.000Z", "valid_until": "2031-01-01T00:00:00.000Z"},
+    regulator,
+)
+verify_credential(credential, at="2027-01-01T00:00:00Z")["verified"]        # True
+```
+
+A credential issued here verifies in the JavaScript reference and the reverse; the `credential` suite of vectors version 3 pins the proof values byte for byte. `verify_authorization_credential(record, at=...)` binds a `regulator_issued` authorization record to the credential it carries. This package verifies and issues credentials; building the authorization record itself (its derived `authorization_id`) is done with the JavaScript constructors or by the registry.
 
 ## Development
 
@@ -69,7 +83,7 @@ pytest
 python -m frontier_shared.conformance
 ```
 
-Vectors are vendored under `src/frontier_shared/vectors/v2/` with the lock file from the JavaScript repository; a test fails if the copy drifts from the lock. A new vectors version is a new directory.
+Vectors are vendored under `src/frontier_shared/vectors/v3/` with the lock file from the JavaScript repository; a test fails if the copy drifts from the lock. A new vectors version is a new directory.
 
 ## License
 

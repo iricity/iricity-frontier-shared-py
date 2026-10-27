@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 - 2026-10-27
+
+- Regulator-issued authorization credentials: `issue_authorization_credential`, `verify_credential`, `verify_authorization_credential`, `credential_hash_data` (W3C Verifiable Credentials Data Model 2.0, Data Integrity `eddsa-jcs-2022`), byte-for-byte compatible with the JavaScript reference.
+- Conformance vectors version 3 (73 cases, nine suites): the new `credential` suite and twelve credential and authorization rejections, all passing. Version jumps to 0.5.0 to match the JavaScript reference that publishes the same vectors.
+
 ## 0.3.0 - 2026-10-17
 
 - Integers at or above 2**53 are formatted as doubles, exactly as the JavaScript reference and RFC 8785 treat JSON numbers.

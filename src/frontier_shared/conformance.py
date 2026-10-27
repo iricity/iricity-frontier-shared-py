@@ -24,11 +24,12 @@ from .envelope import create_envelope, verify_envelope
 from .hashing import hash_payload
 from .keys import KeyPair, did_from_public_key_bytes, public_key_bytes_from_did
 from .receipt import create_receipt_record, verify_receipt_record
+from .credential import credential_hash_data, issue_authorization_credential, verify_authorization_credential, verify_credential
 
 __all__ = ["VECTORS_VERSION", "SUITES", "load_vectors", "bundled_vectors_path", "bundled_lock_path", "run_conformance", "format_report", "main"]
 
-VECTORS_VERSION = "2"
-SUITES = ["canonical_json", "hash_payload", "base58btc", "did_key", "ed25519", "envelope", "receipt", "rejections"]
+VECTORS_VERSION = "3"
+SUITES = ["canonical_json", "hash_payload", "base58btc", "did_key", "ed25519", "envelope", "receipt", "credential", "rejections"]
 
 
 def bundled_vectors_path() -> Path:
@@ -163,9 +164,48 @@ def run_conformance(vectors: dict | None = None) -> dict:
             return True if verification["verified"] else "self-verification failed: " + "; ".join(verification["errors"])
         check("receipt", v["id"], receipt_case)
 
+    for v in suite("credential"):
+        def credential_case(v=v):
+            if v.get("authorization_record"):
+                bound = verify_authorization_credential(v["authorization_record"], at=v["at"])
+                if bound["verified"] != v["expected"]["verified"]:
+                    return f"expected verified={v['expected']['verified']}: " + "; ".join(bound["errors"])
+                if bound["issuer"] != v["expected"]["issuer"]:
+                    return f"issuer: expected {v['expected']['issuer']} got {bound['issuer']}"
+                return True
+            credential = issue_authorization_credential(v["authorization"], _signer(v), created=v["created"], id=v.get("credential_id"))
+            e = v["expected"]
+            if credential["id"] != e["id"]:
+                return f"id: expected {e['id']} got {credential['id']}"
+            if credential["issuer"] != e["issuer"]:
+                return f"issuer: expected {e['issuer']} got {credential['issuer']}"
+            if credential["proof"]["verificationMethod"] != e["verification_method"]:
+                return f"verificationMethod: {credential['proof']['verificationMethod']}"
+            if credential["proof"]["proofValue"] != e["proof_value"]:
+                return f"proofValue: expected {e['proof_value']} got {credential['proof']['proofValue']}"
+            hash_data = credential_hash_data(credential, credential["proof"]).hex()
+            if hash_data != e["hash_data_hex"]:
+                return f"hash_data: expected {e['hash_data_hex']} got {hash_data}"
+            if canonical_json(credential["credentialSubject"]) != canonical_json(e["credential_subject"]):
+                return "credentialSubject differs"
+            verification = verify_credential(credential, at=v["at"])
+            return True if verification["verified"] else "self-verification failed: " + "; ".join(verification["errors"])
+        check("credential", v["id"], credential_case)
+
     for v in suite("rejections"):
         def rejection_case(v=v):
             options = v.get("options") or {}
+            if v["kind"] == "credential":
+                kwargs = {}
+                if "at" in options:
+                    kwargs["at"] = options["at"]
+                if "expected_issuer" in options:
+                    kwargs["expected_issuer"] = options["expected_issuer"]
+                verification = verify_credential(v["object"], **kwargs)
+                return True if verification["verified"] is False else "tampered credential was accepted"
+            if v["kind"] == "authorization":
+                verification = verify_authorization_credential(v["object"], at=options.get("at"))
+                return True if verification["verified"] is False else "unbound authorization was accepted"
             if v["kind"] == "envelope":
                 kwargs = {}
                 if "payload" in options:
